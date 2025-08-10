@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Портфоліо - Василина Петрик</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/portfolio.css">
+</head>
+<body>
+    <header class="header" id="header">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <div class="logo-icon">
+                    <div class="camera-outline">
+                        <div class="lens">
+                            <div class="lens-center"></div>
+                        </div>
+                        <div class="viewfinder"></div>
+                    </div>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-name">Василина Петрик</span>
+                    <span class="logo-subtitle">Фотограф</span>
+                </div>
+            </a>
+            
+            <nav>
+                <ul class="nav-menu" id="nav-menu">
+                    <li><a href="index.html">Головна</a></li>
+                    <li><a href="index.html#about">Про мене</a></li>
+                    <li><a href="portfolio.html" class="active">Портфоліо</a></li>
+                    <li><a href="index.html#services">Послуги</a></li>
+                    <li><a href="index.html#contact">Контакти</a></li>
+                </ul>
+            </nav>
+            
+            <div class="contact-icons">
+                <a href="tel:+380955963641" title="Зателефонувати">
+                    <i class="fas fa-phone"></i>
+                </a>
+                <a href="mailto:vasilinapetrik@gmail.com" title="Написати email">
+                    <i class="fas fa-envelope"></i>
+                </a>
+                <a href="https://instagram.com/vasylynapetryk" target="_blank" title="Instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+            </div>
+            
+            <button class="mobile-menu-btn" id="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+    
+    <main class="portfolio-page">
+        <div class="container">
+            <h1 class="page-title">Портфоліо</h1>
+            <div class="portfolio-filter">
+                <button class="filter-btn active" data-filter="all">Всі</button>
+                <button class="filter-btn" data-filter="individual">Індивідуальні</button>
+                <button class="filter-btn" data-filter="family">Сімейні</button>
+                <button class="filter-btn" data-filter="creative">Творчі</button>
+                <button class="filter-btn" data-filter="brand">Бренди</button>
+            </div>
+            <div class="portfolio-gallery" id="portfolioGallery">
+                <!-- Portfolio items loaded via JavaScript -->
+            </div>
+        </div>
+    </main>
+    
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-image" id="modalImage">
+        <div class="modal-caption" id="modalCaption"></div>
+    </div>
+    
+    <script src="js/scripts.js"></script>
+    <script src="js/portfolio.js"></script>
+</body>
+</html>

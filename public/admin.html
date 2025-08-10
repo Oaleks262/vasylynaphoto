@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Адмін панель - Василина Петрик</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+    <div id="loginForm" class="login-container">
+        <form class="login-form">
+            <h2>Вхід в адмін панель</h2>
+            <div class="form-group">
+                <input type="email" id="adminEmail" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="adminPassword" placeholder="Пароль" required>
+            </div>
+            <button type="submit">Увійти</button>
+            <div id="loginError" class="error-message"></div>
+        </form>
+    </div>
+    
+    <div id="adminPanel" class="admin-panel" style="display:none;">
+        <header class="admin-header">
+            <h1>Адмін панель</h1>
+            <button id="logoutBtn">Вийти</button>
+        </header>
+        
+        <div class="admin-tabs">
+            <button class="tab-btn active" data-tab="services">Послуги</button>
+            <button class="tab-btn" data-tab="portfolio">Портфоліо</button>
+            <button class="tab-btn" data-tab="settings">Налаштування</button>
+        </div>
+        
+        <div id="servicesTab" class="tab-content">
+            <h2>Редагування цін</h2>
+            <div id="servicesList"></div>
+        </div>
+        
+        <div id="portfolioTab" class="tab-content" style="display:none;">
+            <h2>Управління портфоліо</h2>
+            
+            <!-- Масове завантаження -->
+            <div class="upload-section">
+                <h3>Завантаження фото</h3>
+                <form id="bulkUploadForm" class="add-photo-form">
+                    <div class="form-group">
+                        <label>Категорія:</label>
+                        <select id="bulkCategory" required>
+                            <option value="individual">Індивідуальні</option>
+                            <option value="family">Сімейні</option>
+                            <option value="creative">Творчі</option>
+                            <option value="brand">Бренди</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Префікс назви:</label>
+                        <input type="text" id="titlePrefix" placeholder="Наприклад: Весільна фотосесія">
+                    </div>
+                    <div class="form-group">
+                        <label>Зображення (до 20 файлів, до 50MB кожен):</label>
+                        <input type="file" id="bulkFiles" accept="image/*" multiple required>
+                        <small>Фото будуть автоматично конвертовані в формат WebP та оптимізовані</small>
+                    </div>
+                    <button type="submit">Завантажити фото</button>
+                </form>
+            </div>
+
+            <div id="portfolioList"></div>
+        </div>
+        
+        <div id="settingsTab" class="tab-content" style="display:none;">
+            <h2>Налаштування</h2>
+            
+            <div class="settings-section">
+                <h3>Зміна паролю</h3>
+                <form id="changePasswordForm" class="change-password-form">
+                    <div class="form-group">
+                        <label>Поточний пароль:</label>
+                        <input type="password" id="currentPassword" placeholder="Введіть поточний пароль" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Новий пароль:</label>
+                        <input type="password" id="newPassword" placeholder="Введіть новий пароль" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label>Підтвердження нового паролю:</label>
+                        <input type="password" id="confirmPassword" placeholder="Підтвердіть новий пароль" required>
+                    </div>
+                    <button type="submit">Змінити пароль</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/admin.js"></script>
+</body>
+</html>

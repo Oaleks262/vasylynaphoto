@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+    <!-- Головна сторінка -->
+    <url>
+        <loc>https://vasilina-petrik.com/</loc>
+        <lastmod>2025-08-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>1.0</priority>
+    </url>
+
+    <!-- Сторінка портфоліо -->
+    <url>
+        <loc>https://vasilina-petrik.com/portfolio.html</loc>
+        <lastmod>2025-08-10</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.9</priority>
+    </url>
+
+    <!-- Послуги - Індивідуальні фотосесії -->
+    <url>
+        <loc>https://vasilina-petrik.com/#services</loc>
+        <lastmod>2025-08-10</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+
+    <!-- Контакти -->
+    <url>
+        <loc>https://vasilina-petrik.com/#contact</loc>
+        <lastmod>2025-08-10</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.7</priority>
+    </url>
+
+    <!-- Про мене -->
+    <url>
+        <loc>https://vasilina-petrik.com/#about</loc>
+        <lastmod>2025-08-10</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
+</urlset>

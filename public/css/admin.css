@@ -1,0 +1,495 @@
+/* Admin Panel Styles */
+
+:root {
+    --olive: #8B8C2C;
+    --dark-olive: #6B6B20;
+    --light-olive: #A5A642;
+    --beige: #F5E6D3;
+    --light-beige: #FAF0E6;
+    --white: #FFFFFF;
+    --dark-text: #2C2C2C;
+    --light-text: #666;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Helvetica Neue", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", Arial, sans-serif;
+    background: linear-gradient(135deg, var(--olive) 0%, var(--dark-olive) 100%);
+    min-height: 100vh;
+    color: var(--dark-text);
+}
+
+/* Login Form */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+.login-form {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 3rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    width: 100%;
+    max-width: 400px;
+}
+
+.login-form h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--olive);
+    box-shadow: 0 0 0 3px rgba(139, 140, 44, 0.1);
+}
+
+.login-form button,
+.add-photo-form button,
+.service-edit button,
+.portfolio-item-actions button {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(135deg, var(--olive) 0%, var(--dark-olive) 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.login-form button:hover,
+.add-photo-form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(139, 140, 44, 0.4);
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+/* Admin Panel */
+.admin-panel {
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.admin-header {
+    background: linear-gradient(135deg, var(--olive) 0%, var(--dark-olive) 100%);
+    color: white;
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.admin-header h1 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+#logoutBtn {
+    padding: 0.8rem 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+#logoutBtn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* Tabs */
+.admin-tabs {
+    display: flex;
+    background: white;
+    border-bottom: 2px solid #e1e5e9;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn {
+    padding: 1.5rem 2rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.tab-btn.active {
+    color: var(--olive);
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(135deg, var(--olive) 0%, var(--dark-olive) 100%);
+}
+
+.tab-btn:hover {
+    background: #f8f9fa;
+    color: var(--olive);
+}
+
+/* Tab Content */
+.tab-content {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tab-content h2 {
+    margin-bottom: 2rem;
+    color: #333;
+    font-size: 1.8rem;
+}
+
+/* Services Management */
+.service-item {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.service-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.service-header h3 {
+    color: #333;
+    font-size: 1.3rem;
+}
+
+.service-price {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--olive);
+}
+
+.service-edit {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.service-edit input {
+    flex: 1;
+    padding: 0.8rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.service-edit button,
+.update-btn {
+    width: auto;
+    padding: 0.8rem 1.5rem;
+    margin: 0;
+    background: linear-gradient(135deg, var(--olive) 0%, var(--dark-olive) 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.service-edit button:hover,
+.update-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 140, 44, 0.3);
+}
+
+/* Portfolio Management */
+.upload-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.upload-section h3 {
+    color: var(--dark-text);
+    margin-bottom: 1.5rem;
+    font-size: 1.3rem;
+    border-bottom: 2px solid var(--olive);
+    padding-bottom: 0.5rem;
+}
+
+.add-photo-form {
+    margin: 0;
+}
+
+.form-group small {
+    display: block;
+    color: var(--light-text);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.portfolio-item {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.portfolio-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.portfolio-item-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.portfolio-item-content {
+    padding: 1.5rem;
+}
+
+.portfolio-item h3 {
+    margin-bottom: 0.5rem;
+    color: #333;
+}
+
+.portfolio-item p {
+    color: #666;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.portfolio-item-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.portfolio-item-actions button {
+    flex: 1;
+    margin: 0;
+    padding: 0.8rem;
+}
+
+.portfolio-item-actions .delete-btn {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+}
+
+.portfolio-item-actions .delete-btn:hover {
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+}
+
+/* Success/Error Messages */
+.message {
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+}
+
+.message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+/* Loading States */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Settings Tab */
+.settings-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.settings-section h3 {
+    margin-bottom: 1.5rem;
+    color: var(--olive);
+    font-size: 1.3rem;
+}
+
+.change-password-form {
+    max-width: 400px;
+}
+
+.change-password-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.change-password-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark-text);
+}
+
+.change-password-form input[type="password"] {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.change-password-form input[type="password"]:focus {
+    outline: none;
+    border-color: var(--olive);
+    box-shadow: 0 0 0 3px rgba(139, 140, 44, 0.1);
+}
+
+.change-password-form button {
+    background: linear-gradient(135deg, var(--olive) 0%, var(--dark-olive) 100%);
+    color: white;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.change-password-form button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(139, 140, 44, 0.3);
+}
+
+.change-password-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-header {
+        padding: 1.5rem;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .admin-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .admin-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        padding: 1rem 1.5rem;
+        font-size: 1rem;
+    }
+    
+    .tab-content {
+        padding: 1rem;
+    }
+    
+    .service-edit {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .portfolio-item-actions {
+        flex-direction: column;
+    }
+    
+    .login-form {
+        padding: 2rem;
+        margin: 1rem;
+    }
+}
