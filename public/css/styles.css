@@ -641,7 +641,7 @@ body {
     }
 
     .logo-text {
-        display: none;
+        display: flex;
     }
 
     .logo-icon {
