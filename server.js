@@ -105,6 +105,26 @@ const SERVICES_FILE = path.join(DATA_DIR, 'services.json');
 const PORTFOLIO_FILE = path.join(DATA_DIR, 'portfolio.json');
 
 // Helper functions
+function getCategoryDisplayName(category) {
+    const names = {
+        'individual': 'Індивідуальна фотосесія',
+        'family': 'Сімейна фотосесія', 
+        'creative': 'Творча зйомка',
+        'brand': 'Брендінг фото'
+    };
+    return names[category] || 'Фото';
+}
+
+function getCategoryDescription(category) {
+    const descriptions = {
+        'individual': 'індивідуальні',
+        'family': 'сімейні',
+        'creative': 'творчі',
+        'brand': 'брендингові'
+    };
+    return descriptions[category] || 'загальна';
+}
+
 async function readJsonFile(filePath) {
     try {
         console.log(`Reading file: ${filePath}`);
@@ -379,8 +399,8 @@ app.post('/api/admin/portfolio/bulk', authenticateAdmin, upload.array('images', 
         
         const newItem = {
             id: Date.now() + i, // Уникальний ID
-            title: `${titlePrefix || category || 'Фото'} ${i + 1}`,
-            description: `Фотографія з категорії ${category || 'загальна'}`,
+            title: titlePrefix || getCategoryDisplayName(category || 'individual') || 'Фото',
+            description: `Фотографія з категорії ${getCategoryDescription(category || 'individual')}`,
             image: `/uploads/${finalFilename}`,
             category: category || 'individual',
             createdAt: new Date().toISOString()
@@ -396,6 +416,40 @@ app.post('/api/admin/portfolio/bulk', authenticateAdmin, upload.array('images', 
             message: `Завантажено ${addedItems.length} фото`,
             items: addedItems 
         });
+    } else {
+        res.status(500).json({ error: 'Помилка збереження' });
+    }
+});
+
+// Редагування портфоліо айтема
+app.put('/api/admin/portfolio/:id', authenticateAdmin, [
+    body('title').trim().isLength({ min: 1, max: 100 }),
+    body('description').optional().trim().isLength({ max: 500 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Невалідні дані' });
+    }
+    
+    const itemId = parseInt(req.params.id);
+    const { title, description } = req.body;
+    const portfolio = await readJsonFile(PORTFOLIO_FILE);
+    
+    const itemIndex = portfolio.findIndex(item => item.id === itemId);
+    if (itemIndex === -1) {
+        return res.status(404).json({ error: 'Фото не знайдено' });
+    }
+    
+    // Оновлюємо дані
+    portfolio[itemIndex].title = title;
+    if (description !== undefined) {
+        portfolio[itemIndex].description = description;
+    }
+    portfolio[itemIndex].updatedAt = new Date().toISOString();
+    
+    const success = await writeJsonFile(PORTFOLIO_FILE, portfolio);
+    if (success) {
+        res.json({ message: 'Фото оновлено', item: portfolio[itemIndex] });
     } else {
         res.status(500).json({ error: 'Помилка збереження' });
     }

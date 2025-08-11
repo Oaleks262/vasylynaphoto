@@ -169,6 +169,7 @@ function openImageModal(src, alt, title) {
             align-items: center;
             justify-content: center;
             animation: fadeIn 0.3s ease;
+            padding: 1rem;
         }
         
         .modal-content {
@@ -176,31 +177,80 @@ function openImageModal(src, alt, title) {
             max-height: 90vh;
             text-align: center;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         
         .modal-content img {
             max-width: 100%;
-            max-height: 80vh;
+            max-height: calc(90vh - 80px);
             object-fit: contain;
             border-radius: 10px;
+            display: block;
         }
         
         .modal-content h3 {
             color: white;
             margin-top: 1rem;
             font-size: 1.2rem;
+            font-weight: 400;
+            max-width: 100%;
+            word-wrap: break-word;
         }
         
         .modal-close {
             position: absolute;
-            top: -40px;
-            right: 0;
-            background: none;
+            top: -50px;
+            right: -10px;
+            background: rgba(255,255,255,0.1);
             border: none;
             color: white;
             font-size: 2rem;
             cursor: pointer;
             padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        @media (max-width: 768px) {
+            .image-modal {
+                padding: 0.5rem;
+            }
+            
+            .modal-content {
+                max-width: 95vw;
+                max-height: 95vh;
+            }
+            
+            .modal-content img {
+                max-height: calc(95vh - 100px);
+                border-radius: 8px;
+            }
+            
+            .modal-content h3 {
+                font-size: 1rem;
+                margin-top: 0.8rem;
+                padding: 0 0.5rem;
+            }
+            
+            .modal-close {
+                top: -45px;
+                right: -5px;
+                font-size: 1.8rem;
+                width: 36px;
+                height: 36px;
+            }
         }
         
         @keyframes fadeIn {

@@ -202,18 +202,65 @@ async function loadPortfolio() {
         const portfolio = await response.json();
         const portfolioList = document.getElementById('portfolioList');
         
-        portfolioList.innerHTML = portfolio.map(item => `
-            <div class="portfolio-item">
-                <img src="${item.image}" alt="${item.title}" class="portfolio-item-image">
-                <div class="portfolio-item-content">
-                    <h3>${item.title}</h3>
-                    <p>${item.description}</p>
-                    <div class="portfolio-item-actions">
-                        <button onclick="deletePortfolioItem(${item.id})" class="delete-btn">Видалити</button>
+        // Групуємо по категоріях
+        const categories = {
+            individual: [],
+            family: [],
+            creative: [],
+            brand: []
+        };
+        
+        portfolio.forEach(item => {
+            const category = item.category || 'individual';
+            if (categories[category]) {
+                categories[category].push(item);
+            }
+        });
+        
+        const categoryNames = {
+            individual: 'Індивідуальні фотосесії',
+            family: 'Сімейні фотосесії', 
+            creative: 'Творчі зйомки',
+            brand: 'Брендінг фото'
+        };
+        
+        let html = '';
+        
+        Object.keys(categories).forEach(categoryKey => {
+            const items = categories[categoryKey];
+            if (items.length > 0) {
+                html += `
+                    <div class="category-section">
+                        <h3 class="category-title">${categoryNames[categoryKey]} (${items.length})</h3>
+                        <div class="category-items">
+                            ${items.map(item => `
+                                <div class="portfolio-item" data-id="${item.id}">
+                                    <img src="${item.image}" alt="${item.title}" class="portfolio-item-image">
+                                    <div class="portfolio-item-content">
+                                        <div class="item-title-edit">
+                                            <input type="text" class="title-input" value="${item.title}" data-id="${item.id}">
+                                            <button onclick="updatePortfolioItem(${item.id})" class="save-title-btn" title="Зберегти">
+                                                <i class="fas fa-save"></i>
+                                            </button>
+                                        </div>
+                                        <p class="item-description">${item.description}</p>
+                                        <div class="portfolio-item-actions">
+                                            <button onclick="deletePortfolioItem(${item.id})" class="delete-btn">Видалити</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
-            </div>
-        `).join('');
+                `;
+            }
+        });
+        
+        if (html === '') {
+            html = '<div class="empty-portfolio"><p>Портфоліо порожнє. Додайте фотографії.</p></div>';
+        }
+        
+        portfolioList.innerHTML = html;
         
         // Ініціалізація форми завантаження фото
         initBulkUploadForm();
@@ -223,6 +270,43 @@ async function loadPortfolio() {
     }
 }
 
+// Оновлення портфоліо айтема
+async function updatePortfolioItem(itemId) {
+    const titleInput = document.querySelector(`.title-input[data-id="${itemId}"]`);
+    if (!titleInput) {
+        showMessage('Помилка: поле не знайдено', 'error');
+        return;
+    }
+    
+    const newTitle = titleInput.value.trim();
+    if (!newTitle) {
+        showMessage('Назва не може бути порожньою', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/portfolio/${itemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ title: newTitle })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Назва оновлена', 'success');
+            // Можна не перезавантажувати всю сторінку, просто залишити як є
+        } else {
+            showMessage(data.error || 'Помилка оновлення', 'error');
+        }
+    } catch (error) {
+        console.error('Error updating item:', error);
+        showMessage('Помилка оновлення', 'error');
+    }
+}
 
 // Видалення елемента портфоліо
 async function deletePortfolioItem(itemId) {
@@ -421,4 +505,5 @@ function initChangePasswordForm() {
 
 // Експорт функцій для використання в HTML
 window.updateServicePrice = updateServicePrice;
+window.updatePortfolioItem = updatePortfolioItem;
 window.deletePortfolioItem = deletePortfolioItem;
