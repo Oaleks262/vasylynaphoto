@@ -197,11 +197,19 @@ body {
 }
 
 .contact-icons a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     color: var(--olive);
     font-size: 1.2rem;
     transition: all 0.3s ease;
+    text-decoration: none;
     padding: 0.5rem;
     border-radius: 50%;
+    max-width: 35px;
+    width: 100%;
+    max-height: 35px;
+    height: 100%;
 }
 
 .contact-icons a:hover {
