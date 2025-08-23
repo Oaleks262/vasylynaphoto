@@ -249,7 +249,7 @@ body {
 .refresh-btn {
     padding: 0.8rem 1.2rem;
     background: var(--primary);
-    color: white;
+    color: var(--dark-text);
     border: none;
     border-radius: 8px;
     cursor: pointer;
