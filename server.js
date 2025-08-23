@@ -10,6 +10,7 @@ const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const sharp = require('sharp');
+const EmailTemplateManager = require('./email-templates/email-utils');
 require('dotenv').config();
 
 const app = express();
@@ -59,6 +60,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Ініціалізуємо менеджер email-шаблонів
+const emailManager = new EmailTemplateManager();
+
 // Multer конфігурація
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -103,6 +107,7 @@ async function convertToWebP(inputPath, outputPath, quality = 80) {
 const DATA_DIR = './data';
 const SERVICES_FILE = path.join(DATA_DIR, 'services.json');
 const PORTFOLIO_FILE = path.join(DATA_DIR, 'portfolio.json');
+const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 
 // Helper functions
 function getCategoryDisplayName(category) {
@@ -174,6 +179,18 @@ async function initializeData() {
         await fs.mkdir(DATA_DIR, { recursive: true });
         await fs.mkdir('public/uploads', { recursive: true });
         
+        // Перевіряємо email-шаблони
+        console.log('Checking email templates...');
+        const templateValidation = await emailManager.validateTemplates();
+        const allTemplatesValid = Object.values(templateValidation).every(isValid => isValid);
+        
+        if (allTemplatesValid) {
+            console.log('✅ All email templates are available');
+        } else {
+            console.warn('⚠️ Some email templates are missing, fallback templates will be used');
+            console.warn('Template validation results:', templateValidation);
+        }
+        
         // Default services
         if (!(await fs.access(SERVICES_FILE).then(() => true).catch(() => false))) {
             const defaultServices = [
@@ -213,6 +230,11 @@ async function initializeData() {
         if (!(await fs.access(PORTFOLIO_FILE).then(() => true).catch(() => false))) {
             await writeJsonFile(PORTFOLIO_FILE, []);
         }
+        
+        // Default orders
+        if (!(await fs.access(ORDERS_FILE).then(() => true).catch(() => false))) {
+            await writeJsonFile(ORDERS_FILE, []);
+        }
     } catch (error) {
         console.error('Error initializing data:', error);
     }
@@ -244,25 +266,86 @@ app.post('/api/order', orderLimiter, [
     
     const { name, phone, email, service, message, date } = req.body;
     
-    const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: process.env.EMAIL_TO,
-        subject: `Нове замовлення: ${service}`,
-        html: `
-            <h2>Нове замовлення фотосесії</h2>
-            <p><strong>Послуга:</strong> ${service}</p>
-            <p><strong>Ім'я:</strong> ${name}</p>
-            <p><strong>Телефон:</strong> ${phone}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            <p><strong>Бажана дата:</strong> ${date || 'Не вказана'}</p>
-            <p><strong>Повідомлення:</strong></p>
-            <p>${message}</p>
-        `
-    };
-    
     try {
-        await transporter.sendMail(mailOptions);
-        res.json({ message: 'Замовлення успішно відправлено!' });
+        // Створюємо об'єкт замовлення
+        const currentDate = new Date();
+        const order = {
+            id: Date.now(), // Унікальний ID на основі timestamp
+            name,
+            phone,
+            email,
+            service,
+            message: message || '',
+            date: date || '',
+            status: 'new', // new, contacted, confirmed, completed, cancelled
+            createdAt: currentDate.toISOString(),
+            clientIP: req.ip || req.connection.remoteAddress || 'Unknown',
+            userAgent: req.get('User-Agent') || 'Unknown'
+        };
+        
+        // Зберігаємо замовлення в JSON файл
+        const orders = await readJsonFile(ORDERS_FILE);
+        orders.unshift(order); // Додаємо в початок масиву (найновіші зверху)
+        await writeJsonFile(ORDERS_FILE, orders);
+        
+        // Збираємо дані для email
+        const orderData = { name, phone, email, service, message, date };
+        
+        // Статистика для email адміністратора
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const ordersToday = orders.filter(o => new Date(o.createdAt) >= todayStart).length;
+        
+        const additionalData = {
+            clientIP: order.clientIP,
+            userAgent: order.userAgent,
+            ordersToday: ordersToday.toString(),
+            viewsToday: '-',
+            responseTime: '<2h'
+        };
+        
+        // Створюємо email для адміністратора
+        let adminEmail;
+        try {
+            adminEmail = await emailManager.createAdminNotificationEmail(orderData, additionalData);
+        } catch (templateError) {
+            console.warn('Using fallback admin email template:', templateError.message);
+            adminEmail = emailManager.createFallbackEmail(orderData, 'admin');
+        }
+        
+        // Створюємо email для клієнта
+        let clientEmail;
+        try {
+            clientEmail = await emailManager.createClientConfirmationEmail(orderData);
+        } catch (templateError) {
+            console.warn('Using fallback client email template:', templateError.message);
+            clientEmail = emailManager.createFallbackEmail(orderData, 'client');
+        }
+        
+        // Відправляємо email адміністратору
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_TO,
+            subject: adminEmail.subject,
+            html: adminEmail.html,
+            text: adminEmail.text
+        });
+        
+        // Відправляємо підтвердження клієнту
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: clientEmail.subject,
+            html: clientEmail.html,
+            text: clientEmail.text
+        });
+        
+        console.log(`Order #${order.id} saved and emails sent for ${name} (${service})`);
+        res.json({ 
+            message: 'Замовлення успішно відправлено! Перевірте свою пошту для підтвердження.',
+            orderId: order.id 
+        });
+        
     } catch (error) {
         console.error('Email error:', error);
         res.status(500).json({ error: 'Помилка відправки замовлення' });
@@ -344,6 +427,99 @@ app.post('/api/admin/change-password', authenticateAdmin, [
     } catch (error) {
         console.error('Error changing password:', error);
         res.status(500).json({ error: 'Помилка збереження нового паролю' });
+    }
+});
+
+// Адмін API для замовлень
+app.get('/api/admin/orders', authenticateAdmin, async (req, res) => {
+    try {
+        const orders = await readJsonFile(ORDERS_FILE);
+        
+        // Додаємо статистику
+        const now = new Date();
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        
+        const stats = {
+            total: orders.length,
+            today: orders.filter(o => new Date(o.createdAt) >= todayStart).length,
+            new: orders.filter(o => o.status === 'new').length,
+            contacted: orders.filter(o => o.status === 'contacted').length,
+            confirmed: orders.filter(o => o.status === 'confirmed').length,
+            completed: orders.filter(o => o.status === 'completed').length
+        };
+        
+        res.json({
+            orders: orders.slice(0, 100), // Останні 100 замовлень
+            stats
+        });
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        res.status(500).json({ error: 'Помилка завантаження замовлень' });
+    }
+});
+
+// Оновлення статусу замовлення
+app.put('/api/admin/orders/:id', authenticateAdmin, [
+    body('status').isIn(['new', 'contacted', 'confirmed', 'completed', 'cancelled'])
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ error: 'Невалідні дані' });
+    }
+    
+    const orderId = parseInt(req.params.id);
+    const { status } = req.body;
+    
+    try {
+        const orders = await readJsonFile(ORDERS_FILE);
+        const orderIndex = orders.findIndex(o => o.id === orderId);
+        
+        if (orderIndex === -1) {
+            return res.status(404).json({ error: 'Замовлення не знайдено' });
+        }
+        
+        orders[orderIndex].status = status;
+        orders[orderIndex].updatedAt = new Date().toISOString();
+        
+        const success = await writeJsonFile(ORDERS_FILE, orders);
+        if (success) {
+            console.log(`Order #${orderId} status updated to ${status}`);
+            res.json({ message: 'Статус оновлено', order: orders[orderIndex] });
+        } else {
+            res.status(500).json({ error: 'Помилка збереження' });
+        }
+    } catch (error) {
+        console.error('Error updating order:', error);
+        res.status(500).json({ error: 'Помилка оновлення замовлення' });
+    }
+});
+
+// Видалення замовлення
+app.delete('/api/admin/orders/:id', authenticateAdmin, async (req, res) => {
+    const orderId = parseInt(req.params.id);
+    
+    try {
+        const orders = await readJsonFile(ORDERS_FILE);
+        const orderIndex = orders.findIndex(o => o.id === orderId);
+        
+        if (orderIndex === -1) {
+            return res.status(404).json({ error: 'Замовлення не знайдено' });
+        }
+        
+        const deletedOrder = orders[orderIndex];
+        orders.splice(orderIndex, 1);
+        
+        const success = await writeJsonFile(ORDERS_FILE, orders);
+        if (success) {
+            console.log(`Order #${orderId} deleted`);
+            res.json({ message: 'Замовлення видалено', order: deletedOrder });
+        } else {
+            res.status(500).json({ error: 'Помилка збереження' });
+        }
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        res.status(500).json({ error: 'Помилка видалення замовлення' });
     }
 });
 

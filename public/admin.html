@@ -29,12 +29,37 @@
         </header>
         
         <div class="admin-tabs">
-            <button class="tab-btn active" data-tab="services">Послуги</button>
+            <button class="tab-btn active" data-tab="orders">Замовлення</button>
+            <button class="tab-btn" data-tab="services">Послуги</button>
             <button class="tab-btn" data-tab="portfolio">Портфоліо</button>
             <button class="tab-btn" data-tab="settings">Налаштування</button>
         </div>
         
-        <div id="servicesTab" class="tab-content">
+        <div id="ordersTab" class="tab-content">
+            <h2>Замовлення</h2>
+            
+            <div class="orders-stats" id="ordersStats">
+                <!-- Статистика завантажується тут -->
+            </div>
+            
+            <div class="orders-filters">
+                <select id="statusFilter">
+                    <option value="all">Всі статуси</option>
+                    <option value="new">Нові</option>
+                    <option value="contacted">Зв'язались</option>
+                    <option value="confirmed">Підтверджені</option>
+                    <option value="completed">Завершені</option>
+                    <option value="cancelled">Скасовані</option>
+                </select>
+                <button id="refreshOrders" class="refresh-btn">🔄 Оновити</button>
+            </div>
+            
+            <div id="ordersList" class="orders-list">
+                <!-- Замовлення завантажуються тут -->
+            </div>
+        </div>
+        
+        <div id="servicesTab" class="tab-content" style="display:none;">
             <h2>Редагування цін</h2>
             <div id="servicesList"></div>
         </div>

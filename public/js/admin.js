@@ -18,6 +18,7 @@ function initAdminPanel() {
     initTabs();
     initLogout();
     initChangePasswordForm();
+    initOrdersManagement();
 }
 
 // Показ форми логіну
@@ -93,6 +94,15 @@ function initTabs() {
             tabContents.forEach(content => {
                 content.style.display = content.id === tabName + 'Tab' ? 'block' : 'none';
             });
+            
+            // Завантаження даних для активної вкладки
+            if (tabName === 'orders') {
+                loadOrders();
+            } else if (tabName === 'services') {
+                loadServices();
+            } else if (tabName === 'portfolio') {
+                loadPortfolio();
+            }
         });
     });
 }
@@ -108,10 +118,15 @@ function initLogout() {
 
 // Завантаження даних адмін панелі
 async function loadAdminData() {
-    await Promise.all([
-        loadServices(),
-        loadPortfolio()
-    ]);
+    const activeTab = document.querySelector('.tab-btn.active').dataset.tab;
+    
+    if (activeTab === 'orders') {
+        await loadOrders();
+    } else if (activeTab === 'services') {
+        await loadServices();
+    } else if (activeTab === 'portfolio') {
+        await loadPortfolio();
+    }
 }
 
 // Завантаження послуг
@@ -503,7 +518,259 @@ function initChangePasswordForm() {
     });
 }
 
+// Orders Management
+function initOrdersManagement() {
+    // Ініціалізуємо обробники подій
+    const refreshBtn = document.getElementById('refreshOrders');
+    const statusFilter = document.getElementById('statusFilter');
+    
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', loadOrders);
+    }
+    
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterOrders);
+    }
+}
+
+// Завантаження замовлень
+async function loadOrders() {
+    try {
+        console.log('Loading orders...');
+        showOrdersLoading();
+        
+        const response = await fetch('/api/admin/orders', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('adminToken');
+                showLoginForm();
+                return;
+            }
+            throw new Error('Failed to load orders');
+        }
+        
+        const data = await response.json();
+        displayOrders(data.orders, data.stats);
+        
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        showOrdersError();
+    }
+}
+
+// Відображення завантаження замовлень
+function showOrdersLoading() {
+    const ordersList = document.getElementById('ordersList');
+    if (ordersList) {
+        ordersList.innerHTML = `
+            <div class="loading-orders">
+                <p>Завантаження замовлень...</p>
+            </div>
+        `;
+    }
+}
+
+// Відображення помилки завантаження
+function showOrdersError() {
+    const ordersList = document.getElementById('ordersList');
+    if (ordersList) {
+        ordersList.innerHTML = `
+            <div class="no-orders">
+                <p>Помилка завантаження замовлень</p>
+                <button onclick="loadOrders()" class="refresh-btn">Спробувати ще раз</button>
+            </div>
+        `;
+    }
+}
+
+// Відображення замовлень та статистики
+function displayOrders(orders, stats) {
+    displayOrdersStats(stats);
+    
+    const ordersList = document.getElementById('ordersList');
+    if (!ordersList) return;
+    
+    if (!orders || orders.length === 0) {
+        ordersList.innerHTML = `
+            <div class="no-orders">
+                <p>Замовлень поки немає</p>
+            </div>
+        `;
+        return;
+    }
+    
+    ordersList.innerHTML = orders.map(order => createOrderHTML(order)).join('');
+}
+
+// Відображення статистики
+function displayOrdersStats(stats) {
+    const statsContainer = document.getElementById('ordersStats');
+    if (!statsContainer) return;
+    
+    const statItems = [
+        { label: 'Всього', value: stats.total, color: '#333' },
+        { label: 'Сьогодні', value: stats.today, color: '#4ecdc4' },
+        { label: 'Нові', value: stats.new, color: '#ff6b6b' },
+        { label: 'Контакт', value: stats.contacted, color: '#4ecdc4' },
+        { label: 'Підтверджені', value: stats.confirmed, color: '#45b7d1' },
+        { label: 'Завершені', value: stats.completed, color: '#96ceb4' }
+    ];
+    
+    statsContainer.innerHTML = statItems.map(stat => `
+        <div class="stat-card" style="border-left-color: ${stat.color}">
+            <span class="stat-number" style="color: ${stat.color}">${stat.value}</span>
+            <span class="stat-label">${stat.label}</span>
+        </div>
+    `).join('');
+}
+
+// Створення HTML для замовлення
+function createOrderHTML(order) {
+    const statusLabels = {
+        'new': 'Нове',
+        'contacted': 'Зв\'язались',
+        'confirmed': 'Підтверджено',
+        'completed': 'Завершено',
+        'cancelled': 'Скасовано'
+    };
+    
+    const createdDate = new Date(order.createdAt).toLocaleString('uk-UA');
+    const preferredDate = order.date || 'Не вказана';
+    
+    return `
+        <div class="order-item status-${order.status}" data-status="${order.status}">
+            <div class="order-header">
+                <div class="order-info">
+                    <h3>${order.name} - ${order.service}</h3>
+                    <div class="order-meta">
+                        <span>📅 ${createdDate}</span>
+                        <span>🆔 #${order.id}</span>
+                    </div>
+                </div>
+                <span class="order-status status-${order.status}">
+                    ${statusLabels[order.status] || order.status}
+                </span>
+            </div>
+            
+            <div class="order-details">
+                <div class="order-field">
+                    <label>Телефон:</label>
+                    <span>${order.phone}</span>
+                </div>
+                <div class="order-field">
+                    <label>Email:</label>
+                    <span>${order.email}</span>
+                </div>
+                <div class="order-field">
+                    <label>Бажана дата:</label>
+                    <span>${preferredDate}</span>
+                </div>
+            </div>
+            
+            ${order.message ? `
+                <div class="order-message">
+                    <h4>Повідомлення клієнта:</h4>
+                    <p>${order.message}</p>
+                </div>
+            ` : ''}
+            
+            <div class="order-actions">
+                <a href="tel:${order.phone}" class="action-btn btn-contact">📞 Дзвінок</a>
+                <a href="mailto:${order.email}" class="action-btn btn-contact">✉️ Email</a>
+                ${order.status === 'new' ? `<button class="action-btn btn-contact" onclick="updateOrderStatus(${order.id}, 'contacted')">Відмітити як зв'язались</button>` : ''}
+                ${order.status === 'contacted' ? `<button class="action-btn btn-confirm" onclick="updateOrderStatus(${order.id}, 'confirmed')">Підтвердити</button>` : ''}
+                ${order.status === 'confirmed' ? `<button class="action-btn btn-complete" onclick="updateOrderStatus(${order.id}, 'completed')">Завершити</button>` : ''}
+                ${order.status !== 'cancelled' && order.status !== 'completed' ? `<button class="action-btn btn-cancel" onclick="updateOrderStatus(${order.id}, 'cancelled')">Скасувати</button>` : ''}
+                <button class="action-btn btn-delete" onclick="deleteOrder(${order.id})">🗑️ Видалити</button>
+            </div>
+        </div>
+    `;
+}
+
+// Оновлення статусу замовлення
+async function updateOrderStatus(orderId, newStatus) {
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to update order status');
+        }
+        
+        const result = await response.json();
+        console.log('Order status updated:', result);
+        
+        // Перезавантажуємо замовлення
+        await loadOrders();
+        showMessage('Статус замовлення оновлено', 'success');
+        
+    } catch (error) {
+        console.error('Error updating order status:', error);
+        showMessage('Помилка оновлення статусу', 'error');
+    }
+}
+
+// Видалення замовлення
+async function deleteOrder(orderId) {
+    if (!confirm('Ви впевнені що хочете видалити це замовлення? Ця дія незворотна.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/orders/${orderId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete order');
+        }
+        
+        const result = await response.json();
+        console.log('Order deleted:', result);
+        
+        // Перезавантажуємо замовлення
+        await loadOrders();
+        showMessage('Замовлення видалено', 'success');
+        
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        showMessage('Помилка видалення замовлення', 'error');
+    }
+}
+
+// Фільтрування замовлень за статусом
+function filterOrders() {
+    const filterValue = document.getElementById('statusFilter').value;
+    const orderItems = document.querySelectorAll('.order-item');
+    
+    orderItems.forEach(item => {
+        if (filterValue === 'all' || item.dataset.status === filterValue) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
 // Експорт функцій для використання в HTML
 window.updateServicePrice = updateServicePrice;
 window.updatePortfolioItem = updatePortfolioItem;
 window.deletePortfolioItem = deletePortfolioItem;
+window.updateOrderStatus = updateOrderStatus;
+window.deleteOrder = deleteOrder;
