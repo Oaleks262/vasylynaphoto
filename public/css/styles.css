@@ -217,8 +217,9 @@ body {
     font-size: 3.5rem;
     margin-bottom: 1rem;
     color: var(--olive);
-    font-weight: 300;
+    font-weight: 400;
     letter-spacing: 2px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .hero p {
@@ -229,6 +230,7 @@ body {
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .cta-button {
