@@ -321,7 +321,7 @@ function initServiceCards() {
         });
         
         card.addEventListener('mouseleave', () => {
-            card.style.transform = 'translateY(-10px) scale(1)';
+            card.style.transform = '';
         });
     });
 }
@@ -333,7 +333,13 @@ function initOrderModal() {
     const form = document.getElementById('orderForm');
     
     if (!modal || !closeBtn || !form) return;
-    
+
+    // Встановлюємо мінімальну дату = сьогодні
+    const dateInput = document.getElementById('orderDate');
+    if (dateInput) {
+        dateInput.min = new Date().toISOString().split('T')[0];
+    }
+
     // Відкриття модального вікна при кліку на кнопки замовлення
     document.addEventListener('click', (e) => {
         if (e.target.matches('.service-order-btn')) {
@@ -514,24 +520,24 @@ async function loadPortfolio() {
             // По 2 фото з кожної основної категорії
             Object.keys(categories).forEach(category => {
                 if (category !== 'other' && categories[category].length > 0) {
-                    const shuffled = categories[category].sort(() => 0.5 - Math.random());
+                    const shuffled = shuffleArray(categories[category]);
                     selectedPortfolio.push(...shuffled.slice(0, 2));
                 }
             });
-            
+
             // Додаємо рандомне фото якщо є місце
             if (selectedPortfolio.length < 9) {
                 const remaining = allPortfolio.filter(item => !selectedPortfolio.includes(item));
-                const shuffledRemaining = remaining.sort(() => 0.5 - Math.random());
+                const shuffledRemaining = shuffleArray(remaining);
                 selectedPortfolio.push(...shuffledRemaining.slice(0, 9 - selectedPortfolio.length));
             }
-            
+
             // Обмежуємо до 9 фото і перемішуємо
-            selectedPortfolio = selectedPortfolio.slice(0, 9).sort(() => 0.5 - Math.random());
+            selectedPortfolio = shuffleArray(selectedPortfolio.slice(0, 9));
             
             portfolioGrid.innerHTML = selectedPortfolio.map(item => `
                 <div class="portfolio-item fade-in">
-                    <img src="${item.image}" alt="${item.title}" loading="lazy">
+                    <img src="${item.image}" alt="${item.title}" loading="lazy" onerror="this.style.display='none'">
                     <div class="portfolio-overlay">
                         <h3>${item.title}</h3>
                         ${item.description ? `<p>${item.description}</p>` : ''}
@@ -547,6 +553,16 @@ async function loadPortfolio() {
         console.error('Error loading portfolio:', error);
         // Залишаємо статичний контент якщо API недоступне
     }
+}
+
+// Fisher-Yates shuffle — рівномірне перемішування масиву
+function shuffleArray(arr) {
+    const result = [...arr];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
 }
 
 // Допоміжна функція для визначення категорії з назви (якщо немає category поля)

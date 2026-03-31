@@ -50,13 +50,18 @@ function initLoginForm() {
         errorDiv.textContent = '';
         
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000);
+
             const response = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, password }),
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
             
             const data = await response.json();
             
@@ -69,7 +74,11 @@ function initLoginForm() {
                 errorDiv.textContent = data.error || 'Помилка входу';
             }
         } catch (error) {
-            errorDiv.textContent = 'Помилка з\'єднання';
+            if (error.name === 'AbortError') {
+                errorDiv.textContent = 'Час очікування вичерпано. Спробуйте ще раз.';
+            } else {
+                errorDiv.textContent = 'Помилка з\'єднання';
+            }
         } finally {
             submitBtn.disabled = false;
             submitBtn.textContent = 'Увійти';

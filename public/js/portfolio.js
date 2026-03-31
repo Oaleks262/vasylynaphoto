@@ -4,22 +4,19 @@ document.addEventListener('DOMContentLoaded', function() {
     initPortfolioPage();
 });
 
-function initPortfolioPage() {
+async function initPortfolioPage() {
     initPortfolioFilter();
     initImageModal();
-    loadPortfolioItems();
-    
-    // Читаємо параметр категорії з URL
+    await loadPortfolioItems();
+
+    // Застосовуємо фільтр з URL після завантаження елементів
     const urlParams = new URLSearchParams(window.location.search);
     const category = urlParams.get('category');
     if (category && category !== 'all') {
-        // Затримуємо активацію фільтра щоб дати час завантажитись елементам
-        setTimeout(() => {
-            const filterBtn = document.querySelector(`[data-filter="${category}"]`);
-            if (filterBtn) {
-                filterBtn.click();
-            }
-        }, 500);
+        const filterBtn = document.querySelector(`[data-filter="${category}"]`);
+        if (filterBtn) {
+            filterBtn.click();
+        }
     }
 }
 
@@ -51,11 +48,12 @@ function initPortfolioFilter() {
 // Модальне вікно для зображень
 function initImageModal() {
     const modal = document.getElementById('imageModal');
+    if (!modal) return;
     const modalImg = document.getElementById('modalImage');
     const modalCaption = document.getElementById('modalCaption');
     const closeBtn = modal.querySelector('.close-modal');
-    
-    if (!modal || !modalImg || !modalCaption || !closeBtn) return;
+
+    if (!modalImg || !modalCaption || !closeBtn) return;
     
     const closeModal = () => {
         modal.classList.remove('show');
@@ -106,16 +104,18 @@ async function loadPortfolioItems() {
         const gallery = document.getElementById('portfolioGallery');
         
         if (gallery && portfolio.length > 0) {
-            gallery.innerHTML = portfolio.map((item, index) => `
-                <div class="portfolio-item" data-category="${getCategoryFromTitle(item.title)}" style="animation-delay: ${index * 0.1}s">
-                    <img src="${item.image}" alt="${item.title}" loading="lazy">
+            gallery.innerHTML = portfolio.map((item, index) => {
+                const category = item.category || getCategoryFromTitle(item.title);
+                return `
+                <div class="portfolio-item" data-category="${category}" style="animation-delay: ${index * 0.1}s">
+                    <img src="${item.image}" alt="${item.title}" loading="lazy" onerror="this.closest('.portfolio-item').style.display='none'">
                     <div class="portfolio-item-content">
-                        <div class="portfolio-item-category">${getCategoryName(getCategoryFromTitle(item.title))}</div>
+                        <div class="portfolio-item-category">${getCategoryName(category)}</div>
                         <h3>${item.title}</h3>
                         <p>${item.description}</p>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
             
             // Ініціалізація анімацій для нових елементів
             initPortfolioAnimations();

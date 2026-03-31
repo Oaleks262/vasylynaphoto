@@ -13,6 +13,15 @@ const sharp = require('sharp');
 const EmailTemplateManager = require('./email-templates/email-utils');
 require('dotenv').config();
 
+// Перевірка обов'язкових змінних середовища
+const REQUIRED_ENV = ['ADMIN_EMAIL', 'ADMIN_PASSWORD', 'JWT_SECRET', 'EMAIL_USER', 'EMAIL_PASS', 'EMAIL_TO'];
+const missingEnv = REQUIRED_ENV.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+    console.error(`❌ Missing required environment variables: ${missingEnv.join(', ')}`);
+    console.error('   Please check your .env file');
+    process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 2711;
 
@@ -31,14 +40,6 @@ const limiter = rateLimit({
     max: 100 // limit each IP to 100 requests per windowMs
 });
 app.use('/api/', limiter);
-
-// Debug middleware
-app.use('/api/admin/login', (req, res, next) => {
-    console.log('Request headers:', req.headers);
-    console.log('Request method:', req.method);
-    console.log('Raw body length:', req.get('content-length'));
-    next();
-});
 
 // Test endpoint
 app.get('/api/test', (req, res) => {
@@ -108,6 +109,7 @@ const DATA_DIR = './data';
 const SERVICES_FILE = path.join(DATA_DIR, 'services.json');
 const PORTFOLIO_FILE = path.join(DATA_DIR, 'portfolio.json');
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+const ADMIN_FILE = path.join(DATA_DIR, 'admin.json');
 
 // Helper functions
 function getCategoryDisplayName(category) {
@@ -235,6 +237,18 @@ async function initializeData() {
         if (!(await fs.access(ORDERS_FILE).then(() => true).catch(() => false))) {
             await writeJsonFile(ORDERS_FILE, []);
         }
+
+        // Admin credentials — зберігаємо хеш пароля, не plaintext
+        if (!(await fs.access(ADMIN_FILE).then(() => true).catch(() => false))) {
+            const plainPassword = process.env.ADMIN_PASSWORD;
+            if (plainPassword) {
+                const hash = await bcryptjs.hash(plainPassword, 12);
+                await writeJsonFile(ADMIN_FILE, { passwordHash: hash });
+                console.log('✅ Admin credentials initialized');
+            } else {
+                console.error('❌ ADMIN_PASSWORD not set — admin login will not work');
+            }
+        }
     } catch (error) {
         console.error('Error initializing data:', error);
     }
@@ -352,37 +366,35 @@ app.post('/api/order', orderLimiter, [
     }
 });
 
-// Адмін логін - спрощена версія без rate limiting
-app.post('/api/admin/login', (req, res) => {
+// Адмін логін
+app.post('/api/admin/login', async (req, res) => {
     try {
-        console.log('Login request received');
-        console.log('Headers:', req.headers);
-        console.log('Body:', req.body);
-        console.log('Content-Type:', req.get('Content-Type'));
-        
         const { email, password } = req.body;
-        
+
         if (!email || !password) {
-            console.log('Missing email or password');
             return res.status(400).json({ error: 'Email та пароль обов\'язкові' });
         }
-        
-        console.log(`Comparing: "${email}" === "${process.env.ADMIN_EMAIL}"`);
-        console.log(`Comparing: "${password}" === "${process.env.ADMIN_PASSWORD}"`);
-        
-        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign(
-                { email: email },
-                process.env.JWT_SECRET,
-                { expiresIn: '24h' }
-            );
-            
-            console.log('Login successful, token created');
-            res.json({ token, message: 'Успішний вхід' });
-        } else {
-            console.log('Invalid credentials');
-            res.status(401).json({ error: 'Невірні дані' });
+
+        if (email !== process.env.ADMIN_EMAIL) {
+            return res.status(401).json({ error: 'Невірні дані' });
         }
+
+        const adminData = await readJsonFile(ADMIN_FILE);
+        if (!adminData || !adminData.passwordHash) {
+            return res.status(500).json({ error: 'Помилка конфігурації сервера' });
+        }
+
+        const passwordValid = await bcryptjs.compare(password, adminData.passwordHash);
+        if (!passwordValid) {
+            return res.status(401).json({ error: 'Невірні дані' });
+        }
+
+        const token = jwt.sign(
+            { email },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+        res.json({ token, message: 'Успішний вхід' });
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Помилка сервера' });
@@ -398,31 +410,26 @@ app.post('/api/admin/change-password', authenticateAdmin, [
     if (!errors.isEmpty()) {
         return res.status(400).json({ error: 'Невалідні дані' });
     }
-    
+
     const { currentPassword, newPassword } = req.body;
-    
-    // Перевіряємо поточний пароль
-    if (currentPassword !== process.env.ADMIN_PASSWORD) {
-        return res.status(401).json({ error: 'Неправильний поточний пароль' });
-    }
-    
+
     try {
-        // Читаємо .env файл
-        const envPath = path.join(__dirname, '.env');
-        let envContent = await fs.readFile(envPath, 'utf8');
-        
-        // Замінюємо пароль в .env файлі
-        envContent = envContent.replace(
-            /ADMIN_PASSWORD=.*/,
-            `ADMIN_PASSWORD=${newPassword}`
-        );
-        
-        // Записуємо оновлений .env файл
-        await fs.writeFile(envPath, envContent);
-        
-        // Оновлюємо змінну середовища в пам'яті
-        process.env.ADMIN_PASSWORD = newPassword;
-        
+        const adminData = await readJsonFile(ADMIN_FILE);
+        if (!adminData || !adminData.passwordHash) {
+            return res.status(500).json({ error: 'Помилка конфігурації сервера' });
+        }
+
+        const currentValid = await bcryptjs.compare(currentPassword, adminData.passwordHash);
+        if (!currentValid) {
+            return res.status(401).json({ error: 'Неправильний поточний пароль' });
+        }
+
+        const newHash = await bcryptjs.hash(newPassword, 12);
+        const success = await writeJsonFile(ADMIN_FILE, { passwordHash: newHash });
+        if (!success) {
+            return res.status(500).json({ error: 'Помилка збереження нового паролю' });
+        }
+
         res.json({ message: 'Пароль успішно змінено' });
     } catch (error) {
         console.error('Error changing password:', error);
@@ -641,10 +648,16 @@ app.delete('/api/admin/portfolio/:id', authenticateAdmin, async (req, res) => {
     }
     
     const item = portfolio[itemIndex];
-    
-    // Delete file
+
+    // Видаляємо файл тільки якщо шлях знаходиться всередині папки uploads
     try {
-        await fs.unlink(`public${item.image}`);
+        const uploadsDir = path.resolve('public/uploads');
+        const filePath = path.resolve(`public${item.image}`);
+        if (filePath.startsWith(uploadsDir + path.sep) || filePath === uploadsDir) {
+            await fs.unlink(filePath);
+        } else {
+            console.warn(`Blocked suspicious file path: ${filePath}`);
+        }
     } catch (error) {
         console.error('File delete error:', error);
     }

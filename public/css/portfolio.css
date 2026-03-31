@@ -206,6 +206,21 @@
     max-width: 90%;
 }
 
+/* Порожній стан портфоліо */
+.portfolio-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--light-text);
+}
+
+.portfolio-empty p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .portfolio-page {

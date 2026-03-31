@@ -3,6 +3,17 @@
  * Працює в Gmail, Outlook, Apple Mail, Spark та інших клієнтах
  */
 
+// Екранування HTML для безпечного вставлення даних від користувача
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+}
+
 // Базові кольори в стилі сайту
 const colors = {
     olive: '#8B8C2C',
@@ -20,7 +31,12 @@ const colors = {
  * Генерує email для клієнта з підтвердженням замовлення
  */
 function generateClientEmail(orderData) {
-    const { name, service, phone, email, date, message } = orderData;
+    const name = escapeHtml(orderData.name);
+    const service = escapeHtml(orderData.service);
+    const phone = escapeHtml(orderData.phone);
+    const email = escapeHtml(orderData.email);
+    const date = escapeHtml(orderData.date);
+    const message = escapeHtml(orderData.message);
     
     const html = `
 <!DOCTYPE html>
@@ -165,7 +181,12 @@ ${message ? `- Повідомлення: ${message}` : ''}
  * Генерує email для адміністратора про нове замовлення
  */
 function generateAdminEmail(orderData, additionalData = {}) {
-    const { name, service, phone, email, date, message } = orderData;
+    const name = escapeHtml(orderData.name);
+    const service = escapeHtml(orderData.service);
+    const phone = escapeHtml(orderData.phone);
+    const email = escapeHtml(orderData.email);
+    const date = escapeHtml(orderData.date);
+    const message = escapeHtml(orderData.message);
     const { clientIP = 'Unknown', userAgent = 'Unknown', ordersToday = '1' } = additionalData;
     const currentTime = new Date().toLocaleString('uk-UA');
     
