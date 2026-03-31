@@ -13,6 +13,20 @@ function initializeApp() {
     initServiceCards();
     initOrderModal();
     loadDynamicContent();
+    initHeroVideo();
+}
+
+// Відеофон — явний запуск з fallback для мобільних
+function initHeroVideo() {
+    const video = document.querySelector('.hero-video');
+    if (!video) return;
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(() => {
+            video.closest('.hero').classList.add('video-failed');
+        });
+    }
 }
 
 // Мобільне меню

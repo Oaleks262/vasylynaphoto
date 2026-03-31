@@ -187,6 +187,16 @@ body {
     min-height: 100%;
 }
 
+.hero.video-failed {
+    background-image: url('../img/photographer-portrait.webp');
+    background-size: cover;
+    background-position: center;
+}
+
+.hero.video-failed .hero-video {
+    display: none;
+}
+
 .hero-overlay {
     position: absolute;
     top: 0;
